@@ -1,7 +1,7 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from "@remix-run/react";
 import "./tailwind.css";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
       <head>
@@ -17,7 +17,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </body>
     </html>
   );
-}
+};
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+  console.error(error);
+  return (
+    <div className="h-screen w-full flex justify-center items-center">
+      <h1 className="text-3xl">404 | Not Found</h1>
+    </div>
+  );
+};
 
 export default function App() {
   return <Outlet />;
