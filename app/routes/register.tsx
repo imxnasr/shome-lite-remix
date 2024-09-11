@@ -13,12 +13,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
+  const username = formData.get("username");
   const email = formData.get("email");
   const password = formData.get("password");
 
   // Return error if fields are empty
-  if (!email || !password) {
+  if (!username || !email || !password) {
     return json({ error: "All fields are required" });
+  }
+
+  // Check if username is already exists
+  const checkUsername = await prisma.user.findUnique({
+    where: {
+      username: username as string,
+    },
+  });
+  if (checkUsername) {
+    return json({ error: "Username is already exists" });
   }
 
   // Check if email is already exists
@@ -27,21 +38,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       email: email as string,
     },
   });
-  if (!checkEmail) {
-    return json({ error: "Email is not exists" });
+  if (checkEmail) {
+    return json({ error: "Email is already exists" });
   }
 
-  // Check if password is correct
-  const user = await prisma.user.findUnique({
-    where: {
+  const user = await prisma.user.create({
+    data: {
+      username: username as string,
       email: email as string,
       password: password as string,
     },
   });
-  if (!user) {
-    return json({ error: "Password is not correct" });
-  }
-
   const session = await getSession(request.headers.get("Cookie"));
   session.set("id", user.id);
   session.set("role", user.role);
@@ -57,11 +64,12 @@ export default () => {
   return (
     <Form method="post" className="flex flex-col">
       {actionData?.error && <p>{actionData.error}</p>}
-      <h1 className="text-3xl">Login</h1>
-      <input className="bg-gray-900" type="email" name="email" placeholder="Email" />
-      <input className="bg-gray-900" type="password" name="password" placeholder="Password" />
+      <h1 className="text-3xl">Register</h1>
+      <input className="bg-gray-900" type="text" name="username" placeholder="Username" required />
+      <input className="bg-gray-900" type="email" name="email" placeholder="Email" required />
+      <input className="bg-gray-900" type="password" name="password" placeholder="Password" required />
       <button className="bg-gray-900" type="submit">
-        Login
+        Register
       </button>
     </Form>
   );

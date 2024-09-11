@@ -1,6 +1,6 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Link, redirect, useLoaderData } from "@remix-run/react";
-import { getSession } from "~/sessions";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { Form, Link, redirect, useLoaderData } from "@remix-run/react";
+import { getSession, destroySession } from "~/sessions";
 
 export const meta: MetaFunction = () => {
   return [{ title: "New Remix App" }, { name: "description", content: "Welcome to Remix!" }];
@@ -14,6 +14,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return session.data;
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const session = await getSession(request.headers.get("Cookie"));
+  const formType = formData.get("formType");
+  if (formType === "logout") {
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": await destroySession(session),
+      },
+    });
+  }
+  return null;
+};
+
 export default () => {
   const data = useLoaderData<typeof loader>();
   return (
@@ -21,6 +35,10 @@ export default () => {
       <h1 className="text-3xl">Welcome to Remix</h1>
       <Link to="/login">Login</Link>
       <Link to="/register">Register</Link>
+      <Form method="post">
+        <input type="hidden" name="formType" value="logout" />
+        <button type="submit">Logout</button>
+      </Form>
       <hr />
       <hr />
       <hr />
