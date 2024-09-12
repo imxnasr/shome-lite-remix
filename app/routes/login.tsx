@@ -12,9 +12,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const url = new URL(request.url);
   const formData = await request.formData();
   const email = formData.get("email");
   const password = formData.get("password");
+  const redirectUrl = url.searchParams.get("redirect");
 
   // Return error if fields are empty
   if (!email || !password) {
@@ -45,11 +47,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const session = await getSession(request.headers.get("Cookie"));
   session.set("id", user.id);
   session.set("role", user.role);
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
+  if (redirectUrl) {
+    return redirect(redirectUrl, {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } else {
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
 };
 
 export default () => {

@@ -38,6 +38,7 @@ export default () => {
       <Form method="post">
         <input type="hidden" name="formType" value="logout" />
         <button type="submit">Logout</button>
+        {data.role === "ADMIN" && <Link to="/admin">Admin</Link>}
       </Form>
       <hr />
       <hr />
